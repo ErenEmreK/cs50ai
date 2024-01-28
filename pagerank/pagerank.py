@@ -4,8 +4,9 @@ import re
 import sys
 
 DAMPING = 0.85
-SAMPLES = 10000
+SAMPLES = 100000
 rank = -1
+pagerank = {}
 
 def main():
     if len(sys.argv) != 2:
@@ -100,24 +101,36 @@ def sample_pagerank(corpus, damping_factor, n):
         
     return pagerank
     
-def calculate_pr(corpus, page, damping_factor):
-    global rank
-    length = len(corpus)
-    links = [key for key, value in corpus.items() if page in value]
+def calculate_pr(corpus, p, damping_factor):
+    global pagerank
+    #Maps every link to current page to their count of total links
+    links = {}
+    check = False
+    for key in corpus:
+        counter = 0
+        for value in corpus[key]:
+            counter += 1
+            if value == p:
+                check = True
+        if check:
+            links[key] = counter
+            check = False
+            
+    corpus_length = len(corpus)
     
-    pr = (1 - damping_factor) / length
+    pr = (1 - damping_factor) / corpus_length
     sigma = 0
+    
     for link in links:
-        sigma += rank / len(links) 
+        sigma += pagerank[link] / links[link]      
     pr += damping_factor * sigma
-    print(pr)
     
-    if (max(pr, rank) - min(pr, rank) < 0.001):
-        return pr
+    if (max(pr, pagerank[p]) - min(pr, pagerank[p])) < 0.00001:
+        return True
     
-    rank = pr 
-    return calculate_pr(corpus, page, damping_factor)     
-
+    pagerank[p] = pr 
+    return False
+    
 def iterate_pagerank(corpus, damping_factor):
     """
     Return PageRank values for each page by iteratively updating
@@ -127,64 +140,23 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    pagerank = {}
     length = len(corpus)
-    global rank
+    for page in corpus:
+        pagerank[page] = 1 / length
     
-    for i in corpus:
-        pagerank[i] = 1 / length
-    
-    while True:
+    flag = True
+    while flag:  
+        if not flag:
+            break
         
-    #Dumbass you dont calculate pr(i) for i that links to page,
-    #you calculate it for rank of current page, fix it 
+        for page in pagerank:
+            if calculate_pr(corpus, page, damping_factor):
+                flag = False
+                
     return pagerank
+     
 
 if __name__ == "__main__":
     main()
-    #iterate_pagerank(crawl(sys.argv[1]), DAMPING)
-    #print(sample_pagerank(crawl(sys.argv[1]), DAMPING, 1000))
-    #print(pr(crawl(sys.argv[1])), "1.html", DAMPING, )
-    #print(calculate_pr(crawl(sys.argv[1]), "1.html", DAMPING))
     
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-    pr = (1 - damping_factor) / length
-    while switch:
-        for page in pagerank: 
-            links = []
-            for key, value in corpus.items():
-                if value == page:
-                    links.append(key)
-                    
-            pr = (1 - damping_factor) / length
-            sigma = 0
-            for i in links: 
-                print(i)
-                sigma += pagerank[i] / len(i)
-            pr += damping_factor * sigma
-            
-            if max(pr, pagerank[page]) - min(pr, pagerank[page]) < 0.001:
-                switch = False
-
-            pagerank[key] = pr
-        
-    print(pagerank)
-    return pagerank   
-    """
-    
