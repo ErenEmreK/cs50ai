@@ -156,23 +156,23 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                   
             if person in have_trait:
                 if person in one_gene:                  
-                    probability *= (((prob_map[mother] * (1 - prob_map[father])) + (prob_map[father] * (1 - prob_map[mother])))) 
+                    probability *= (prob_map[mother] * (1 - prob_map[father]) + prob_map[father] * (1 - prob_map[mother]))
                     probability *= PROBS["trait"][1][True]
                 elif person in two_genes:
-                    probability *= prob_map[mother] + prob_map[father]
+                    probability *= prob_map[mother] * prob_map[father]
                     probability *= PROBS["trait"][2][True]
                 else:
-                    probability *= (1 - prob_map[mother]) + (1 - prob_map[father])
+                    probability *= (1 - prob_map[mother]) * (1 - prob_map[father])
                     probability *= PROBS["trait"][0][True]
             else:
                 if person in one_gene:                  
                     probability *= (prob_map[mother] * (1 - prob_map[father]) + prob_map[father] * (1 - prob_map[mother])) 
                     probability *= PROBS["trait"][1][False]
                 elif person in two_genes:
-                    probability *= prob_map[mother] + prob_map[father]
+                    probability *= prob_map[mother] * prob_map[father]
                     probability *= PROBS["trait"][2][False]
                 else:
-                    probability *= (1 - prob_map[mother]) + (1 - prob_map[father])
+                    probability *= (1 - prob_map[mother]) * (1 - prob_map[father])
                     probability *= PROBS["trait"][0][False]
         else:
             if person in have_trait:
