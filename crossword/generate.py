@@ -1,5 +1,5 @@
 import sys
-
+import copy
 from crossword import *
 
 
@@ -99,8 +99,10 @@ class CrosswordCreator():
         (Remove any values that are inconsistent with a variable's unary
          constraints; in this case, the length of the word.)
         """
-        for var in self.domains:
-            for word in self.domains[var]:
+        domains_copy = copy.copy(self.domains)
+        
+        for var in domains_copy:
+            for word in domains_copy[var].copy():
                 if len(word) != var.length:
                     self.domains[var].remove(word)
         
@@ -113,21 +115,23 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        overlap = self.crossword.overlaps[x, y]
+    
         legit = False
         revised = False
-        if overlap:
-            i, j = overlap
-            for value in self.domains[x]:
-                for cor_value in self.domains[y]:
-                    if value[i] == cor_value[j]:
-                        legit = True 
-                        break  
-                if not legit:
-                    self.domains[x].remove(value)
-                    made = True
-                legit = False
+        if x != y: 
 
+            overlap = self.crossword.overlaps[x, y]
+            if overlap:
+                i, j = overlap
+                for value in self.domains[x].copy():
+                    for cor_value in self.domains[y]:
+                        if value[i] == cor_value[j]:
+                            legit = True 
+                            break  
+                    if not legit:
+                        self.domains[x].remove(value)
+                        revised = True
+                    legit = False
         return revised
 
     def ac3(self, arcs=None):
@@ -220,12 +224,18 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
+        if self.assignment_complete:
+            return assignment
         var = self.select_unassigned_variable(assignment)
-        values = self.order_domain_values(var, assignment)
-        
-        #TODO Backtracking search in notes
-        
-        
+        for value in self.order_domain_values(var, assignment):
+            assignment[var] = value
+            if self.consistent(assignment):
+                result = self.backtrack(assignment)
+                if result != None:
+                    return result
+                assignment[var] = None
+                
+        return None
 
 def main():
 
@@ -244,13 +254,14 @@ def main():
     assignment = creator.solve()
 
     # Print result
+    print(assignment)
     if assignment is None:
         print("No solution.")
     else:
         creator.print(assignment)
         if output:
             creator.save(assignment, output)
-
+    
 
 if __name__ == "__main__":
     main()
