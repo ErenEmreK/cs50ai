@@ -2,7 +2,10 @@ import csv
 import sys
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+import os
 
+os.environ["LOKY_MAX_CPU_COUNT"] = "4"
 TEST_SIZE = 0.4
 
 
@@ -29,9 +32,7 @@ def main():
     print(f"Incorrect: {(y_test != predictions).sum()}")
     print(f"True Positive Rate: {100 * sensitivity:.2f}%")
     print(f"True Negative Rate: {100 * specificity:.2f}%")
-
-
-        
+      
 def load_data(filename):
     """
     Load shopping data from a CSV file `filename` and convert into a list of
@@ -100,8 +101,7 @@ def load_data(filename):
             row[15] = 1 if row[15] == "Returning_Visitor" else 0#4
             row[16] = 1 if row[16] == 'TRUE' else 0#5                
     configure_evidence(evidence)
-    
-    print(labels[0])        
+           
     return (evidence, labels)
 
 def train_model(evidence, labels):
@@ -109,8 +109,9 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
-
+    knn = KNeighborsClassifier(n_neighbors=1)
+    knn.fit(evidence, labels)
+    return knn
 
 def evaluate(labels, predictions):
     """
@@ -127,9 +128,21 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
-
+    true_pos = 0
+    true_neg = 0
+    total_pos = 0
+    total_neg = 0
+    
+    for i in range(len(labels)):
+        if labels[i] == 1:
+            if predictions[i] == 1:
+                true_pos += 1
+            total_pos += 1
+        else: 
+            if predictions[i] == 0:
+                true_neg += 1
+            total_neg += 1
+    return (true_pos / total_pos, true_neg / total_neg)
 
 if __name__ == "__main__":
-    #main()
-    load_data("shopping.csv")
+    main()
